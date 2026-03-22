@@ -1,0 +1,419 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>RoboCall Hunter</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: #0f0f0f;
+            color: #e0e0e0;
+            padding: 20px;
+            max-width: 600px;
+            margin: 0 auto;
+        }
+        h1 {
+            color: #00ff88;
+            margin-bottom: 10px;
+            font-size: 24px;
+        }
+        .subtitle {
+            color: #888;
+            font-size: 14px;
+            margin-bottom: 30px;
+        }
+        .form-group {
+            margin-bottom: 20px;
+        }
+        label {
+            display: block;
+            margin-bottom: 8px;
+            color: #aaa;
+            font-size: 14px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        input, select, textarea {
+            width: 100%;
+            padding: 12px;
+            background: #1a1a1a;
+            border: 1px solid #333;
+            border-radius: 8px;
+            color: #fff;
+            font-size: 16px;
+            transition: border-color 0.2s;
+        }
+        input:focus, select:focus, textarea:focus {
+            outline: none;
+            border-color: #00ff88;
+        }
+        textarea {
+            min-height: 80px;
+            resize: vertical;
+        }
+        .quick-buttons {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+            margin-top: 8px;
+        }
+        .quick-btn {
+            padding: 8px 16px;
+            background: #1a1a1a;
+            border: 1px solid #333;
+            border-radius: 20px;
+            color: #888;
+            cursor: pointer;
+            font-size: 13px;
+            transition: all 0.2s;
+        }
+        .quick-btn:hover {
+            border-color: #00ff88;
+            color: #00ff88;
+        }
+        .quick-btn.active {
+            background: #00ff88;
+            color: #0f0f0f;
+            border-color: #00ff88;
+        }
+        button[type="submit"] {
+            width: 100%;
+            padding: 16px;
+            background: #00ff88;
+            color: #0f0f0f;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            margin-top: 20px;
+            transition: transform 0.1s, opacity 0.2s;
+        }
+        button[type="submit"]:hover {
+            opacity: 0.9;
+        }
+        button[type="submit"]:active {
+            transform: scale(0.98);
+        }
+        .stats {
+            display: flex;
+            gap: 20px;
+            margin-bottom: 30px;
+            padding: 20px;
+            background: #1a1a1a;
+            border-radius: 12px;
+        }
+        .stat {
+            flex: 1;
+            text-align: center;
+        }
+        .stat-value {
+            font-size: 32px;
+            font-weight: 700;
+            color: #00ff88;
+        }
+        .stat-label {
+            font-size: 12px;
+            color: #888;
+            text-transform: uppercase;
+            margin-top: 4px;
+        }
+        .call-list {
+            margin-top: 40px;
+        }
+        .call-list h2 {
+            color: #fff;
+            margin-bottom: 20px;
+            font-size: 18px;
+        }
+        .call-item {
+            background: #1a1a1a;
+            border-radius: 12px;
+            padding: 16px;
+            margin-bottom: 12px;
+            border-left: 4px solid #333;
+            transition: border-color 0.2s;
+        }
+        .call-item:hover {
+            border-left-color: #00ff88;
+        }
+        .call-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 8px;
+        }
+        .call-number {
+            font-size: 18px;
+            font-weight: 600;
+            color: #fff;
+        }
+        .call-date {
+            font-size: 12px;
+            color: #666;
+        }
+        .call-type {
+            display: inline-block;
+            padding: 4px 12px;
+            background: #0f0f0f;
+            border-radius: 12px;
+            font-size: 12px;
+            color: #00ff88;
+            margin-bottom: 8px;
+        }
+        .call-notes {
+            color: #888;
+            font-size: 14px;
+            line-height: 1.5;
+        }
+        .empty-state {
+            text-align: center;
+            padding: 60px 20px;
+            color: #666;
+        }
+        .empty-state-icon {
+            font-size: 48px;
+            margin-bottom: 16px;
+        }
+        .status-badge {
+            display: inline-block;
+            padding: 4px 10px;
+            border-radius: 12px;
+            font-size: 11px;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+        .status-logged { background: #333; color: #888; }
+        .status-researched { background: #1a3a1a; color: #4ade80; }
+        .status-demanded { background: #3a1a1a; color: #f87171; }
+        .status-settled { background: #1a1a3a; color: #60a5fa; }
+        .toast {
+            position: fixed;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%) translateY(100px);
+            background: #00ff88;
+            color: #0f0f0f;
+            padding: 16px 32px;
+            border-radius: 8px;
+            font-weight: 600;
+            opacity: 0;
+            transition: all 0.3s;
+            z-index: 1000;
+        }
+        .toast.show {
+            transform: translateX(-50%) translateY(0);
+            opacity: 1;
+        }
+    </style>
+</head>
+<body>
+    <h1>🎯 RoboCall Hunter</h1>
+    <p class="subtitle">Log spam calls. Stack claims. Get paid.</p>
+
+    <div class="stats">
+        <div class="stat">
+            <div class="stat-value" id="totalCalls">0</div>
+            <div class="stat-label">Calls Logged</div>
+        </div>
+        <div class="stat">
+            <div class="stat-value" id="potentialValue">$0</div>
+            <div class="stat-label">Potential Value</div>
+        </div>
+        <div class="stat">
+            <div class="stat-value" id="uniqueCallers">0</div>
+            <div class="stat-label">Unique Callers</div>
+        </div>
+    </div>
+
+    <form id="callForm">
+        <div class="form-group">
+            <label for="phoneNumber">Phone Number *</label>
+            <input type="tel" id="phoneNumber" placeholder="(555) 123-4567" required>
+        </div>
+
+        <div class="form-group">
+            <label>Call Type</label>
+            <div class="quick-buttons" id="typeButtons">
+                <button type="button" class="quick-btn" data-value="Solar">Solar</button>
+                <button type="button" class="quick-btn" data-value="Insurance">Insurance</button>
+                <button type="button" class="quick-btn" data-value="Warranty">Warranty</button>
+                <button type="button" class="quick-btn" data-value="Medicare">Medicare</button>
+                <button type="button" class="quick-btn" data-value="Credit Card">Credit Card</button>
+                <button type="button" class="quick-btn" data-value="Other">Other</button>
+            </div>
+            <input type="hidden" id="callType" value="">
+        </div>
+
+        <div class="form-group">
+            <label for="companyName">Company Name (if they said one)</label>
+            <input type="text" id="companyName" placeholder="e.g., SunPower Solutions">
+        </div>
+
+        <div class="form-group">
+            <label for="notes">Quick Notes</label>
+            <textarea id="notes" placeholder="What did they try to sell? Did you ask them to stop calling?"></textarea>
+        </div>
+
+        <div class="form-group">
+            <label>Recording?</label>
+            <div class="quick-buttons">
+                <button type="button" class="quick-btn" data-value="yes" id="recordedYes">Yes</button>
+                <button type="button" class="quick-btn" data-value="no" id="recordedNo">No</button>
+            </div>
+            <input type="hidden" id="recorded" value="no">
+        </div>
+
+        <button type="submit">💾 Log Call</button>
+    </form>
+
+    <div class="call-list">
+        <h2>Recent Calls</h2>
+        <div id="callsContainer">
+            <div class="empty-state">
+                <div class="empty-state-icon">📞</div>
+                <p>No calls logged yet. Time to answer some spam!</p>
+            </div>
+        </div>
+    </div>
+
+    <div class="toast" id="toast">Call logged!</div>
+
+    <script>
+        // Data storage
+        let calls = JSON.parse(localStorage.getItem('robocallHunter_calls') || '[]');
+
+        // DOM elements
+        const form = document.getElementById('callForm');
+        const typeButtons = document.querySelectorAll('#typeButtons .quick-btn');
+        const recordedBtns = document.querySelectorAll('[data-value="yes"], [data-value="no"]');
+        const toast = document.getElementById('toast');
+
+        // Quick button handlers
+        typeButtons.forEach(btn => {
+            btn.addEventListener('click', () => {
+                typeButtons.forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+                document.getElementById('callType').value = btn.dataset.value;
+            });
+        });
+
+        // Recording toggle
+        document.getElementById('recordedYes').addEventListener('click', () => {
+            document.getElementById('recordedYes').classList.add('active');
+            document.getElementById('recordedNo').classList.remove('active');
+            document.getElementById('recorded').value = 'yes';
+        });
+
+        document.getElementById('recordedNo').addEventListener('click', () => {
+            document.getElementById('recordedNo').classList.add('active');
+            document.getElementById('recordedYes').classList.remove('active');
+            document.getElementById('recorded').value = 'no';
+        });
+
+        // Set default
+        document.getElementById('recordedNo').classList.add('active');
+
+        // Form submission
+        form.addEventListener('submit', (e) => {
+            e.preventDefault();
+            
+            const call = {
+                id: Date.now(),
+                phoneNumber: document.getElementById('phoneNumber').value,
+                callType: document.getElementById('callType').value || 'Unknown',
+                companyName: document.getElementById('companyName').value,
+                notes: document.getElementById('notes').value,
+                recorded: document.getElementById('recorded').value === 'yes',
+                timestamp: new Date().toISOString(),
+                status: 'logged'
+            };
+
+            calls.unshift(call);
+            localStorage.setItem('robocallHunter_calls', JSON.stringify(calls));
+
+            // Reset form
+            form.reset();
+            typeButtons.forEach(b => b.classList.remove('active'));
+            document.getElementById('recordedNo').classList.add('active');
+            document.getElementById('recorded').value = 'no';
+
+            // Update UI
+            updateStats();
+            renderCalls();
+            showToast('Call logged! 💰');
+        });
+
+        // Update stats
+        function updateStats() {
+            document.getElementById('totalCalls').textContent = calls.length;
+            document.getElementById('potentialValue').textContent = '$' + (calls.length * 500).toLocaleString();
+            
+            const unique = new Set(calls.map(c => c.phoneNumber)).size;
+            document.getElementById('uniqueCallers').textContent = unique;
+        }
+
+        // Render calls
+        function renderCalls() {
+            const container = document.getElementById('callsContainer');
+            
+            if (calls.length === 0) {
+                container.innerHTML = `
+                    <div class="empty-state">
+                        <div class="empty-state-icon">📞</div>
+                        <p>No calls logged yet. Time to answer some spam!</p>
+                    </div>
+                `;
+                return;
+            }
+
+            container.innerHTML = calls.slice(0, 10).map(call => {
+                const date = new Date(call.timestamp);
+                const dateStr = date.toLocaleDateString() + ' ' + date.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
+                
+                return `
+                    <div class="call-item">
+                        <div class="call-header">
+                            <span class="call-number">${formatPhone(call.phoneNumber)}</span>
+                            <span class="call-date">${dateStr}</span>
+                        </div>
+                        <span class="call-type">${call.callType}</span>
+                        ${call.companyName ? `<div style="color: #aaa; font-size: 13px; margin-bottom: 8px;">Claimed: ${call.companyName}</div>` : ''}
+                        ${call.notes ? `<div class="call-notes">${call.notes}</div>` : ''}
+                        <div style="margin-top: 12px; display: flex; gap: 8px; align-items: center;">
+                            <span class="status-badge status-${call.status}">${call.status}</span>
+                            ${call.recorded ? '<span style="color: #4ade80; font-size: 12px;">🎙️ Recorded</span>' : ''}
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        // Format phone number
+        function formatPhone(num) {
+            const cleaned = num.replace(/\D/g, '');
+            if (cleaned.length === 10) {
+                return `(${cleaned.slice(0,3)}) ${cleaned.slice(3,6)}-${cleaned.slice(6)}`;
+            }
+            return num;
+        }
+
+        // Show toast
+        function showToast(msg) {
+            toast.textContent = msg;
+            toast.classList.add('show');
+            setTimeout(() => toast.classList.remove('show'), 2000);
+        }
+
+        // Initialize
+        updateStats();
+        renderCalls();
+    </script>
+</body>
+</html>
